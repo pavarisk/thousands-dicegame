@@ -1,18 +1,20 @@
-import { useState, SetStateAction } from 'react'
+import { useState, SetStateAction, BaseSyntheticEvent, useRef, MutableRefObject, useEffect } from 'react'
 import reactLogo from './assets/react.svg'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import Col from 'react-bootstrap/Col'
 import './App.css'
+import { Card, Modal, ModalBody, ModalHeader } from 'react-bootstrap'
 
 
 interface Player {
   playerNumber: number
   name: string;
-  score: number[]
+  score: number[];
+  xs: number[];
 }
 
-const minimumPlayers = [{playerNumber: 1, name: '', score: []},{playerNumber: 2, name: '', score: []}]
+const minimumPlayers = [{playerNumber: 1, name: '', score: [], xs: []},{playerNumber: 2, name: '', score: [], xs: []}]
 
 function App() {
   const [, setState] = useState()
@@ -21,6 +23,9 @@ function App() {
   const [numOfPlayers, setNumOfPlayers] = useState(2)
   const [players, setPlayers] = useState(minimumPlayers as Player[])
   const [gameReady, readyUp] = useState(false)
+  const [currentPlayer, setCurrentPlayer] = useState({} as Player)
+  const [winner, setWinner] = useState({} as Player)
+  const thisTurnScore: MutableRefObject<number> = useRef(0)
   
 
   function selectGameMode (mode: string) {
@@ -38,23 +43,93 @@ function App() {
       currentPlayers[i] = {
         playerNumber: i + 1,
         name: '',
-        score: []
+        score: [],
+        xs: [],
       }
     }
     setPlayers(currentPlayers as Player[])
   }
 
-  function onChangePlayerName (playerNumber, name) {
+  function onChangePlayerName (playerNumber: number, name: string) {
     const player = players.find((player) => (player.playerNumber === playerNumber))
     if (player) {
       return player.name = name
     }
   }
 
-  function continueToGame (e) {
+  function isPlayerTurn(player: Player) {
+    if (player.playerNumber === currentPlayer.playerNumber) return true
+    return false
+  }
+
+  function getTotalScore(score: number[]) {
+    let total = score.reduce((total, turn) => 
+      total + turn, 0
+    )
+    return total;
+  }
+
+  function submitTurnScore () {
+    let score = Number(thisTurnScore.current)
+
+    if (score === 0) {
+      currentPlayer.xs.push(score)
+    } else {
+      currentPlayer.score.push(score)
+    }
+    
+    const totalScore = getTotalScore(currentPlayer.score)
+    const winScore = Number(winningScore.replace(',', ''))
+
+    
+    if (totalScore > winScore) {
+      currentPlayer.score.pop()
+      score = 0
+      currentPlayer.xs.push(0)
+    } else if (totalScore === winScore) {
+      setWinner(currentPlayer)
+    }
+
+    if (score === 0 && currentPlayer.xs.length % 3 === 0) {
+      if (gameMode === '10,000') {
+        currentPlayer.score.push(-1000)
+      } else {
+        currentPlayer.score.push(-500)
+      }
+    }
+
+    const currentPlayerIndex = players.findIndex((player) => player.playerNumber === currentPlayer.playerNumber )
+    if (currentPlayerIndex === players.length - 1) {
+      setCurrentPlayer(players[0])
+    } else {
+      setCurrentPlayer(players[currentPlayerIndex + 1])
+    }
+    setState({} as SetStateAction<undefined>)
+  }
+
+  function getXsCount (xs: number[]): string {
+    switch (xs.length % 3) {
+      default: return "Fresh Slate"
+      case 1: return "X"
+      case 2: return "X X"
+      case 3: return "X X X"
+    }
+  }
+
+  function getXsStyle(xs: number[]) {
+    if (getXsCount(xs) === "Fresh Slate") {
+      return {color: 'green'}
+    } else return {color: 'red'}
+  }
+
+  function continueToGame (e: BaseSyntheticEvent) {
     e.preventDefault()
     readyUp(true)
   }
+
+  useEffect(() => {
+    setCurrentPlayer(players[0])
+  }, [players.length])
 
   return (
     <div className='App'>
@@ -85,7 +160,8 @@ function App() {
           <Button onClick={() => selectWinningScore('15,000')}>15,000</Button>
           </div>}
         {!!gameMode && !!winningScore && !gameReady && <p>Select numbers of players in your game &#40;2-6&#41;</p>}
-        {!!gameMode && !!winningScore && !gameReady && <input type='range' min={2} max={6} onChange={(e) => selectNumOfPlayers(e.target.value)} value={numOfPlayers}></input>}
+        {!!gameMode && !!winningScore && !gameReady && <p style={{color: 'red'}}>Note: You cannot win without a name!</p>}
+        {!!gameMode && !!winningScore && !gameReady && <input type='range' min={2} max={6} onChange={(e) => selectNumOfPlayers(e.target.value as unknown as number)} value={numOfPlayers}></input>}
         <Form>
         {!!gameMode && !!winningScore && !gameReady && players.map((player, i) => (
         <Form.Group key={'Player' + player.playerNumber} controlId={`Player${i}`}>
@@ -98,9 +174,25 @@ function App() {
         </Form>
       </div>
       {gameReady &&
-        <div>
-          
+        <div className='d-flex flex-column flex-lg-row justify-content-between'>
+          {players.map((player) => <Card className='w-100'>
+            <Card.Title>{player.name}</Card.Title>
+            <Card.Subtitle>{getTotalScore(player.score)}</Card.Subtitle>
+            <Card.Body style={getXsStyle(player.xs)}>{getXsCount(player.xs)}</Card.Body>
+            {isPlayerTurn(player) && 
+              <Form>
+              <Form.Group controlId='playerTurnScore'>
+              <Form.Label>Your score this turn</Form.Label>
+              <Form.Control type='number' placeholder='Please enter your score' onChange={(e) => thisTurnScore.current = e.target.value as unknown as number} autoFocus></Form.Control>
+              <Button variant='success' type='submit' className='mt-2' onClick={submitTurnScore}>Submit</Button>
+              </Form.Group>
+              </Form>}
+          </Card>)}
         </div>}
+        <Modal show={!!winner.name} onHide={() => setWinner({} as Player)}>
+          <ModalHeader>Congratulations!!!</ModalHeader>
+          <ModalBody>{winner.name}, you are the winner</ModalBody>
+          </Modal>
     </div>
   )
 }
