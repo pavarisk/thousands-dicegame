@@ -5,9 +5,10 @@ import Form from 'react-bootstrap/Form'
 import Col from 'react-bootstrap/Col'
 import './App.css'
 import { Card, Modal, ModalBody, ModalHeader } from 'react-bootstrap'
+import SetUp from './SetUp'
 
 
-interface Player {
+export interface Player {
   playerNumber: number
   name: string;
   score: number[];
@@ -25,6 +26,7 @@ function App() {
   const [gameReady, readyUp] = useState(false)
   const [currentPlayer, setCurrentPlayer] = useState({} as Player)
   const [winner, setWinner] = useState({} as Player)
+  const [invalidScore, setValidity] = useState(false)
   const thisTurnScore: MutableRefObject<number> = useRef(0)
   
 
@@ -127,6 +129,16 @@ function App() {
     readyUp(true)
   }
 
+  function onScoreChange (e: BaseSyntheticEvent) {
+    const value = e.target.value as unknown as number
+    scoreValidation(value)
+    thisTurnScore.current = value
+  }
+
+  function scoreValidation (score: number) {
+    return setValidity(score % 50 !== 0)
+  }
+
   useEffect(() => {
     setCurrentPlayer(players[0])
   }, [players.length])
@@ -134,45 +146,18 @@ function App() {
   return (
     <div className='App'>
       {/* <h1>Thousands Dice Game</h1> */}
-      <div className="card">
-        <span className='d-flex flex-col justify-content-between'>
-          <div className='d-flex flex-row'>
-            <strong>Game Mode: </strong>
-            <p className='mx-2'>{!gameMode ? 'Please select a game mode' : gameMode}</p>
-          </div>
-          <div className='d-flex flex-row'>
-            <strong>Winning Score: </strong>
-            <p className='mx-2'>{!winningScore ? 'Please select winning score' : winningScore}</p>
-          </div>
-        </span>
-        <span>
-          <strong>Number of Players:</strong> {numOfPlayers}
-        </span>
-        {!gameMode && <p>Please select your game mode</p>}
-        {!gameMode && <div className="d-flex flex-row justify-content-around">
-          <Button onClick={() => selectGameMode('1,000')}>1,000</Button>
-          <Button onClick={() => selectGameMode('10,000')}>10,000</Button>
-        </div>}
-        {!!gameMode && !winningScore && <p>Please select your winning score</p>}
-        {!!gameMode && !winningScore && <div className="d-flex flex-row justify-content-around">
-          {gameMode !== '10,000' && <Button onClick={() => selectWinningScore('5,000')}>5,000</Button>}
-          <Button onClick={() => selectWinningScore('10,000')}>10,000</Button>
-          <Button onClick={() => selectWinningScore('15,000')}>15,000</Button>
-          </div>}
-        {!!gameMode && !!winningScore && !gameReady && <p>Select numbers of players in your game &#40;2-6&#41;</p>}
-        {!!gameMode && !!winningScore && !gameReady && <p style={{color: 'red'}}>Note: You cannot win without a name!</p>}
-        {!!gameMode && !!winningScore && !gameReady && <input type='range' min={2} max={6} onChange={(e) => selectNumOfPlayers(e.target.value as unknown as number)} value={numOfPlayers}></input>}
-        <Form>
-        {!!gameMode && !!winningScore && !gameReady && players.map((player, i) => (
-        <Form.Group key={'Player' + player.playerNumber} controlId={`Player${i}`}>
-          <Form.Label>Player {player.playerNumber}</Form.Label>
-          <Form.Control type='text' placeholder='Player Name' onChange={(e) => onChangePlayerName(player.playerNumber, e.target.value)}/>
-        </Form.Group>
-        ))}
-        <br />
-        {!!gameMode && !!winningScore && !gameReady && <Button type='submit' onClick={continueToGame}>Continue</Button>}
-        </Form>
-      </div>
+      {!gameReady && 
+        <SetUp 
+          gameMode={gameMode} 
+          winningScore={winningScore} 
+          numOfPlayers={numOfPlayers} 
+          players={players} 
+          selectGameMode={selectGameMode} 
+          selectWinningScore={selectWinningScore} 
+          selectNumOfPlayers={selectNumOfPlayers} 
+          onChangePlayerName={onChangePlayerName} 
+          continueToGame={continueToGame}
+        />}
       {gameReady &&
         <div className='d-flex flex-column flex-lg-row justify-content-between'>
           {players.map((player) => <Card className='w-100'>
@@ -183,7 +168,7 @@ function App() {
               <Form>
               <Form.Group controlId='playerTurnScore'>
               <Form.Label>Your score this turn</Form.Label>
-              <Form.Control type='number' placeholder='Please enter your score' onChange={(e) => thisTurnScore.current = e.target.value as unknown as number} autoFocus></Form.Control>
+              <Form.Control type='number' placeholder='Please enter your score' step={50} isInvalid={invalidScore} onChange={onScoreChange} autoFocus></Form.Control>
               <Button variant='success' type='submit' className='mt-2' onClick={submitTurnScore}>Submit</Button>
               </Form.Group>
               </Form>}
