@@ -12,7 +12,6 @@ export interface Player {
   playerNumber: number
   name: string;
   score: number[];
-  xs: number[];
 }
 
 const minimumPlayers = [{playerNumber: 1, name: '', score: [], xs: []},{playerNumber: 2, name: '', score: [], xs: []}]
@@ -27,6 +26,7 @@ function App() {
   const [currentPlayer, setCurrentPlayer] = useState({} as Player)
   const [winner, setWinner] = useState({} as Player)
   const [invalidScore, setValidity] = useState(false)
+  const [isFirstTurn, setFirstTurn] = useState(true)
   const thisTurnScore: MutableRefObject<number> = useRef(0)
   
 
@@ -74,11 +74,7 @@ function App() {
   function submitTurnScore () {
     let score = Number(thisTurnScore.current)
 
-    if (score === 0) {
-      currentPlayer.xs.push(score)
-    } else {
-      currentPlayer.score.push(score)
-    }
+    currentPlayer.score.push(score)
     
     const totalScore = getTotalScore(currentPlayer.score)
     const winScore = Number(winningScore.replace(',', ''))
@@ -87,12 +83,12 @@ function App() {
     if (totalScore > winScore) {
       currentPlayer.score.pop()
       score = 0
-      currentPlayer.xs.push(0)
+      currentPlayer.score.push(0)
     } else if (totalScore === winScore) {
       setWinner(currentPlayer)
     }
 
-    if (score === 0 && currentPlayer.xs.length % 3 === 0) {
+    if (score === 0 && countXs(currentPlayer) % 3 === 0) {
       if (gameMode === '10,000') {
         currentPlayer.score.push(-1000)
       } else {
@@ -109,17 +105,21 @@ function App() {
     setState({} as SetStateAction<undefined>)
   }
 
-  function getXsCount (xs: number[]): string {
-    switch (xs.length % 3) {
+  function countXs (player: Player) {
+    return player.score.filter(score => score === 0).length
+  }
+
+  function getXsCount (player: Player): string {
+    let count = countXs(player)
+    switch (count % 3) {
       default: return "Fresh Slate"
       case 1: return "X"
       case 2: return "X X"
-      case 3: return "X X X"
     }
   }
 
-  function getXsStyle(xs: number[]) {
-    if (getXsCount(xs) === "Fresh Slate") {
+  function getXsStyle(player: Player) {
+    if (getXsCount(player) === "Fresh Slate") {
       return {color: 'green'}
     } else return {color: 'red'}
   }
@@ -139,9 +139,26 @@ function App() {
     return setValidity(score % 50 !== 0)
   }
 
+  function back () {
+    const currentPlayerIndex = players.findIndex((player) => player.playerNumber === currentPlayer.playerNumber )
+    if (currentPlayerIndex === 0) {
+      setCurrentPlayer(players[players.length - 1])
+      players[players.length - 1].score.pop()
+    } else {
+      setCurrentPlayer(players[currentPlayerIndex - 1])
+      players[currentPlayerIndex - 1].score.pop()
+    }
+  }
+
   useEffect(() => {
     setCurrentPlayer(players[0])
   }, [players.length])
+
+  useEffect(() => {
+    if (players[0].score.length === 0) {
+      setFirstTurn(true)
+    } else setFirstTurn(false)
+  })
 
   return (
     <div className='App'>
@@ -163,13 +180,16 @@ function App() {
           {players.map((player) => <Card className='w-100'>
             <Card.Title>{player.name}</Card.Title>
             <Card.Subtitle>{getTotalScore(player.score)}</Card.Subtitle>
-            <Card.Body style={getXsStyle(player.xs)}>{getXsCount(player.xs)}</Card.Body>
+            <Card.Body style={getXsStyle(player)}>{getXsCount(player)}</Card.Body>
             {isPlayerTurn(player) && 
               <Form>
               <Form.Group controlId='playerTurnScore'>
               <Form.Label>Your score this turn</Form.Label>
               <Form.Control type='number' placeholder='Please enter your score' step={50} isInvalid={invalidScore} onChange={onScoreChange} autoFocus></Form.Control>
-              <Button variant='success' type='submit' className='mt-2' onClick={submitTurnScore}>Submit</Button>
+              <div className='d-flex flex-row justify-content-around'>
+                {isFirstTurn === false && <Button variant='secondary' className='mt-2' onClick={back}>Back</Button>}
+                <Button variant='success' type='submit' className='mt-2' onClick={submitTurnScore}>Submit</Button>
+              </div>
               </Form.Group>
               </Form>}
           </Card>)}
