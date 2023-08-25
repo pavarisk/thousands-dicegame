@@ -72,6 +72,7 @@ function App() {
   }
 
   function submitTurnScore () {
+    if (invalidScore) return
     let score = Number(thisTurnScore.current)
 
     currentPlayer.score.push(score)
