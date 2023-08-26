@@ -13,6 +13,7 @@ import Col from "react-bootstrap/Col";
 import "./App.css";
 import { Card, Modal, ModalBody, ModalHeader } from "react-bootstrap";
 import SetUp from "./SetUp";
+import GameInfo from "./GameInfo";
 
 export interface Player {
   playerNumber: number;
@@ -21,8 +22,8 @@ export interface Player {
 }
 
 const minimumPlayers = [
-  { playerNumber: 1, name: "", score: [], xs: [] },
-  { playerNumber: 2, name: "", score: [], xs: [] },
+  { playerNumber: 1, name: "", score: [] },
+  { playerNumber: 2, name: "", score: [] },
 ];
 
 function App() {
@@ -54,7 +55,6 @@ function App() {
         playerNumber: i + 1,
         name: "",
         score: [],
-        xs: [],
       };
     }
     setPlayers(currentPlayers as Player[]);
@@ -79,7 +79,8 @@ function App() {
     return total;
   }
 
-  function submitTurnScore() {
+  function submitTurnScore(e: BaseSyntheticEvent) {
+    e.preventDefault();
     if (invalidScore) return;
     let score = Number(thisTurnScore.current);
 
@@ -112,6 +113,9 @@ function App() {
     } else {
       setCurrentPlayer(players[currentPlayerIndex + 1]);
     }
+    const scoreInput = document.getElementById("playerTurnScore") as any;
+    console.log(scoreInput.value);
+    scoreInput.value = "";
     setState({} as SetStateAction<undefined>);
   }
 
@@ -176,7 +180,7 @@ function App() {
   });
 
   return (
-    <div className="App">
+    <div className="">
       {/* <h1>Thousands Dice Game</h1> */}
       {!gameReady && (
         <SetUp
@@ -192,67 +196,54 @@ function App() {
         />
       )}
       {gameReady && (
-        <div className="card">
-          <span className="d-flex flex-col justify-content-between">
-            <div className="d-flex flex-row">
-              <strong>Game Mode: </strong>
-              <p className="mx-2">{gameMode}</p>
-            </div>
-            <div className="d-flex flex-row">
-              <strong>Winning Score: </strong>
-              <p className="mx-2">{winningScore}</p>
-            </div>
-          </span>
-          <span>
-            <strong>Number of Players:</strong> {numOfPlayers}
-          </span>
-        </div>
+        <GameInfo
+          gameMode={gameMode}
+          winningScore={winningScore}
+          numOfPlayers={numOfPlayers}
+          players={players}
+          getTotalScore={getTotalScore}
+          getXsCount={getXsCount}
+          getXsStyle={getXsStyle}
+        />
       )}
       {gameReady && (
         <div className="d-flex flex-column flex-lg-row justify-content-between">
-          {players.map((player) => (
-            <Card className="w-100">
-              <Card.Title>{player.name}</Card.Title>
-              <Card.Subtitle>{getTotalScore(player.score)}</Card.Subtitle>
-              <Card.Body style={getXsStyle(player)}>
-                {getXsCount(player)}
-              </Card.Body>
-              {isPlayerTurn(player) && (
-                <Form>
-                  <Form.Group controlId="playerTurnScore">
-                    <Form.Label>Your score this turn</Form.Label>
-                    <Form.Control
-                      type="number"
-                      placeholder="Please enter your score"
-                      step={50}
-                      isInvalid={invalidScore}
-                      onChange={onScoreChange}
-                      autoFocus
-                    ></Form.Control>
-                    <div className="d-flex flex-row justify-content-around">
-                      {isFirstTurn === false && (
-                        <Button
-                          variant="secondary"
-                          className="mt-2"
-                          onClick={back}
-                        >
-                          Back
-                        </Button>
-                      )}
-                      <Button
-                        variant="success"
-                        type="submit"
-                        className="mt-2"
-                        onClick={submitTurnScore}
-                      >
-                        Submit
-                      </Button>
-                    </div>
-                  </Form.Group>
-                </Form>
-              )}
-            </Card>
-          ))}
+          <Card className="w-100">
+            <Card.Title>
+              <b>{currentPlayer.name.toLocaleUpperCase()}</b>
+            </Card.Title>
+            <Card.Subtitle>{getTotalScore(currentPlayer.score)}</Card.Subtitle>
+            <Card.Body style={getXsStyle(currentPlayer)}>
+              {getXsCount(currentPlayer)}
+            </Card.Body>
+            <Form>
+              <Form.Group controlId="playerTurnScore">
+                <Form.Control
+                  type="number"
+                  placeholder="Please enter your score"
+                  step={50}
+                  isInvalid={invalidScore}
+                  onChange={onScoreChange}
+                  autoFocus
+                ></Form.Control>
+                <div className="d-flex flex-row justify-content-around">
+                  {isFirstTurn === false && (
+                    <Button variant="secondary" className="mt-2" onClick={back}>
+                      Back
+                    </Button>
+                  )}
+                  <Button
+                    variant="success"
+                    type="submit"
+                    className="mt-2"
+                    onClick={submitTurnScore}
+                  >
+                    Submit
+                  </Button>
+                </div>
+              </Form.Group>
+            </Form>
+          </Card>
         </div>
       )}
       <Modal show={!!winner.name} onHide={() => setWinner({} as Player)}>
