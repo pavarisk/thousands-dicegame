@@ -16,13 +16,13 @@
 
 ## Introduction
 
-Welcome to **Dice Score Showdown**, a thrilling dice game that combines strategy and chance. The goal is to reach the winning score before your opponents. With two exciting game modes, 5,000s and 10,000s, you can choose your level of challenge and speed. Gather your friends, grab your dice, and embark on a journey of risk and reward!
+Welcome to **Thousands Dice Game**, a thrilling dice game that combines strategy and chance. The goal is to reach the winning score before your opponents. With two exciting game modes, 5,000s and 10,000s, you can choose your level of challenge and speed. Gather your friends, grab your dice, and embark on a journey of risk and reward!
 
 ---
 
 ## Requirements
 
-To play Dice Score Showdown, you'll need the following:
+To play Thousands Dice Game, you'll need the following:
 
 - 6 six-sided dice.
 - An internet-ready device such as a phone, computer, or tablet.
@@ -31,7 +31,7 @@ To play Dice Score Showdown, you'll need the following:
 
 ## Scoring System
 
-In Dice Score Showdown, each number on the left of the "=" represents a combination of dice that you can score on your turn. Here's the scoring system:
+In Thousands Dice Game, each number on the left of the "=" represents a combination of dice that you can score on your turn. Here's the scoring system:
 
 - 5 = 50 points
 - 1 = 100 points
@@ -62,7 +62,7 @@ If there are no possible scores you can take from your roll, it will result in a
 
 ## Game Modes
 
-Dice Score Showdown offers two game modes:
+Thousands Dice Game offers two game modes:
 
 **1. 5,000s Mode:**
 - Players get 3 chances to roll the dice on their turn.
@@ -120,5 +120,5 @@ You win by accumulating points on your turn until you reach the winning score. H
 
 ## Acknowledgments
 
-Enjoy playing Dice Score Showdown, a game of strategy and chance created by Pavaris Kakanat. Have fun, and may the dice be ever in your favor!
+Enjoy playing Thousands Dice Game, a game of strategy and chance created by Pavaris Kakanat. Have fun, and may the dice be ever in your favor!
 
